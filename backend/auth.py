@@ -1,20 +1,9 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
-from functools import wraps
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
 auth_bp = Blueprint('auth', __name__)
-
-def login_required(f):
-    @wraps(f)
-    def wrapped(*args, **kwargs):
-        if 'user_id' not in session:
-            return jsonify({'error':'Login required'})
-        return f(*args, **kwargs)
-    
-    return wrapped
-
-
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -30,7 +19,7 @@ def register():
         cursor.execute("INSERT INTO users (username, email, password_hash) VALUES (?,?,?)",
                     (username, email, generate_password_hash(password)))
         db.commit()
-        return jsonify({"message": "User registered successfully"}), 201
+        return jsonify({"message": "User registered successfully"}), 200
     except Exception as e:
         db.rollback()
         return jsonify({'error':str(e)}), 400
@@ -45,27 +34,40 @@ def login():
     user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
     
     if user and check_password_hash(user['password_hash'], password):
-        session['user_id'] = user['id']
+        access_token = create_access_token(identity=user['id'])
+        refresh_token = create_refresh_token(identity=user['id'])
         return jsonify({
+            "access_token": access_token,
+            "refresh_token": refresh_token,
             "id":user['id'],
             "username":user['username'],
             "email": user['email']
-        }), 201
+        }), 200
     else:
         return jsonify({"error": "Invalid credentials"}), 401
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    current_user = get_jwt_identity()
+    new_token = create_access_token(identity=current_user)
     
-@auth_bp.route('/logout', methods=['POST'])
-def logout():
-    session.pop('user_id', None)
-    return jsonify({"message": "Logged out successfully"}), 201
+    return jsonify(access_token=new_token), 200
+
+# @auth_bp.route('/logout', methods=['POST'])
+# def logout():
+#     session.pop('user_id', None)
+#     return jsonify({"message": "Logged out successfully"}), 201
 
 @auth_bp.route('/me', methods=['GET'])
-@login_required
+@jwt_required()
 def profile():
-    if 'user_id' not in session:
-        return jsonify({'error':'Login Required'})
+    user_id = get_jwt_identity()
     
     db = get_db()
-    user = db.execute('SELECT id, username, email FROM users WHERE id= ?', (session['user_id'],)).fetchone()
+    user = db.execute('SELECT id, username, email FROM users WHERE id= ?', (user_id,)).fetchone()
     
-    return jsonify(dict(user)), 201
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    return jsonify(dict(user)), 200
