@@ -19,6 +19,9 @@ export default function NavBar() {
                         <Link href="/" className="hover:text-gray-300">Home</Link>
                     </li>
                     <li>
+                        <Link href="/search" className="hover:text-gray-300">Search</Link>
+                    </li>
+                    <li>
                         <Link href="/playlists" className="hover:text-gray-300">Playlists</Link>
                     </li>
                     <li>
