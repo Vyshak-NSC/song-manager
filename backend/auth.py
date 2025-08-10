@@ -6,11 +6,11 @@ from functools import wraps
 auth_bp = Blueprint('auth', __name__)
 
 def login_required(f):
-    @wraps
+    @wraps(f)
     def wrapped(*args, **kwargs):
         if 'user_id' not in session:
             return jsonify({'error':'Login required'})
-        return f(*args, *kwargs)
+        return f(*args, **kwargs)
     
     return wrapped
 
@@ -46,7 +46,11 @@ def login():
     
     if user and check_password_hash(user['password_hash'], password):
         session['user_id'] = user['id']
-        return jsonify({"message": "Login successful"}), 201
+        return jsonify({
+            "id":user['id'],
+            "username":user['username'],
+            "email": user['email']
+        }), 201
     else:
         return jsonify({"error": "Invalid credentials"}), 401
     
