@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
@@ -36,13 +36,16 @@ def login():
     if user and check_password_hash(user['password_hash'], password):
         access_token = create_access_token(identity=user['id'])
         refresh_token = create_refresh_token(identity=user['id'])
-        return jsonify({
+        
+        response = make_response(jsonify({
             "access_token": access_token,
-            "refresh_token": refresh_token,
             "id":user['id'],
             "username":user['username'],
             "email": user['email']
-        }), 200
+        }), 200)
+        response.set_cookie('refresh_token',refresh_token, httponly=True, secure=True, samesite='Strict')
+        
+        return response
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
@@ -54,10 +57,12 @@ def refresh():
     
     return jsonify(access_token=new_token), 200
 
-# @auth_bp.route('/logout', methods=['POST'])
-# def logout():
-#     session.pop('user_id', None)
-#     return jsonify({"message": "Logged out successfully"}), 201
+@auth_bp.route('/logout', methods=['POST'])
+def logout():
+    response = make_response(jsonify({"message":" Logged out successfully"}), 200)
+    response.set_cookie('refresh_token','', httponly=True, secure=True, samesite='Strict')
+    
+    return response
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()

@@ -11,27 +11,51 @@ export function AuthProvider({ children }){
 
     const getToken = () => localStorage.getItem('access_token');
 
-    useEffect(() => {
-        const token = getToken();
+    const refreshToken = async () => {
+        try{
+            const res = await fetch('http://localhost:5000/refresh', {
+                method: 'GET',
+                credentials: 'include',
+            });
+            if( !res.ok) throw new Error("faield to refresh token");
 
-        if(!token){
-            setIsLoading(false);
-            setUser(null);
-            setIsAuthenticated(false);
-            return;
+            const data = await res.json();
+            localStorage.setItem('access_token', data.access_token);
+            
+            return data.access_token;
+        }catch(error){
+            logout();
+            return null;
+        }
+    };
+
+    const fetchUser = async (token) => {
+        let accessToken = token;
+        if(!accessToken){
+            accessToken = getToken();
+            if(!accessToken){ throw new Error("No token found"); }
         }
 
-        setIsLoading(true);
-        fetch('http://localhost:5000/me', {
+        let res = await fetch('http://localhost:5000/me', {
             method: 'GET',
-            headers:{
-                'Authorization': `Bearer ${token}`
-            },
-        })
-            .then((response) => {
-                if(!response.ok) throw new Error("Login Required");
-                return response.json();
-            })
+            headers: { Authorization: `Bearer ${accessToken}`},
+        });
+        if (res.status === 401) {
+            accessToken = await refreshToken();
+            if(!accessToken) throw new Error('Unauthorized');
+            res = await fetch('http://localhost:5000/me', {
+                method: 'GET',
+                headers: { Authorization: `Bearer ${accessToken}`},
+            });
+        }
+        if (!res.ok) throw new Error("Failed to fetch user");
+
+        return await res.json();
+    }
+
+    useEffect(() => {
+        setIsLoading(true);
+        fetchUser()
             .then((data) => {
                 setUser(data);
                 setIsAuthenticated(true);
@@ -44,7 +68,7 @@ export function AuthProvider({ children }){
                 localStorage.removeItem('access_token');
             })
             .finally(() => setIsLoading(false));
-    },[])
+        },[]);
 
     const login = async (username, password) => {
         try{

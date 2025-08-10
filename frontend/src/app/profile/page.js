@@ -10,10 +10,16 @@ export default function ProfilePage() {
         <ProtectedRoute>
             <div align="center">
                 <h1>My Profile</h1>
-                <div>
-                    <p><strong>Username:</strong> {user.username}</p>
-                    <p><strong>Email:</strong> {user.email}</p>
-                </div>
+                { isAuthenticated ? (
+                    <div>
+                        <p><strong>Username:</strong> {user.username}</p>
+                        <p><strong>Email:</strong> {user.email}</p>
+                    </div>
+                ): (
+                    <>
+                        <p>You need to be logged in to view your profile.</p>
+                    </>
+                )}
             </div>
         </ProtectedRoute>
     );
