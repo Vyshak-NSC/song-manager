@@ -1,9 +1,9 @@
 from flask import Blueprint, request, jsonify, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_refresh_cookies
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
@@ -26,7 +26,9 @@ def register():
     
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.json
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Missing JSON body"}), 422
     username = data['username']
     password = data['password']
     
@@ -34,8 +36,8 @@ def login():
     user = db.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
     
     if user and check_password_hash(user['password_hash'], password):
-        access_token = create_access_token(identity=user['id'])
-        refresh_token = create_refresh_token(identity=user['id'])
+        access_token = create_access_token(identity=str(user['id']))
+        refresh_token = create_refresh_token(identity=str(user['id']))
         
         response = make_response(jsonify({
             "access_token": access_token,
@@ -43,7 +45,7 @@ def login():
             "username":user['username'],
             "email": user['email']
         }), 200)
-        response.set_cookie('refresh_token',refresh_token, httponly=True, secure=True, samesite='Strict')
+        set_refresh_cookies(response,refresh_token)#, httponly=True, secure=True, samesite='Strict')
         
         return response
     else:

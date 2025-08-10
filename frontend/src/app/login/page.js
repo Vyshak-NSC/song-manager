@@ -14,8 +14,8 @@ export default function LoginPage(){
     const handleSubmit = async(e) => {
         e.preventDefault();
         const success = await login(username, password);
-        if(success){ router.push("/profile"); }
-        else { outerHeight.push("/login"); }
+        if(success){ router.push("/"); }
+        else { router.push("/login"); }
     }
 
     return(
