@@ -16,8 +16,10 @@ init_app(app)
 with app.app_context():
     init_db() 
     
-from routes.auth import auth_bp
+from routes import auth_bp, playlist_bp, song_bp
 app.register_blueprint(auth_bp)
+app.register_blueprint(song_bp)
+app.register_blueprint(playlist_bp)
 
 @app.route('/')
 def index():

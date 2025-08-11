@@ -128,14 +128,13 @@ export function AuthProvider({ children }){
         }
     })
 
-    const register = useCallback(async (username, password, email) => {
+    const register = useCallback(async (username, email, password) => {
         setIsLoading(true);
         try{
             const response = await fetch(`${url}/register`, {
                 method: 'POST',
-                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, email })
+                body: JSON.stringify({ username, email, password })
             });
 
             if(!response.ok){
