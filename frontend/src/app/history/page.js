@@ -20,7 +20,7 @@ export default function HistoryPage() {
   return (
     <ProtectedRoute>
       <div className="bg-[#121212] min-h-screen text-white p-6">
-        <h1 className="text-3xl font-bold mb-6">Recently Played</h1>
+        <h1 className="text-2xl font-bold mb-6">Recently Played</h1>
         
         <section>
           <div className="flex flex-col gap-4">

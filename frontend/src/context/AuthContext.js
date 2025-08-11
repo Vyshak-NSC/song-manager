@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 export const AuthContext = createContext();
 
+const url = "http://192.168.29.4:5000/auth";
+
 export function AuthProvider({ children }){
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +16,7 @@ export function AuthProvider({ children }){
 
     const logout = useCallback(async () => {
         try{
-            await fetch('http://localhost:5000/auth/logout', {
+            await fetch(`${url}/logout`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -29,7 +31,7 @@ export function AuthProvider({ children }){
 
     const refreshToken = useCallback(async () => {
         try{
-            const res = await fetch('http://localhost:5000/auth/refresh', {
+            const res = await fetch(`${url}/refresh`, {
                 method: 'POST',
                 credentials: 'include',
             });
@@ -55,9 +57,10 @@ export function AuthProvider({ children }){
         }
 
         try{
-            const res = await fetch('http://localhost:5000/auth/me', {
+            const res = await fetch(`${url}/me`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` },
+                credentials: 'include',
             });
             console.log("Response status:", res.status);
             if (res.status === 401){
@@ -67,8 +70,9 @@ export function AuthProvider({ children }){
                     console.log("Failed to refresh token, logging out...");
                     return null;
                 }
-                const retryToken = await fetch('http://localhost:5000/auth/me', {
+                const retryToken = await fetch(`${url}/me`, {
                     method: 'GET',
+                    credentials: 'include',
                     headers: { 'Authorization': `Bearer ${newToken}` },
                 });
                 if (!retryToken.ok) {
@@ -89,7 +93,7 @@ export function AuthProvider({ children }){
     const login = useCallback(async (username, password) => {
         setIsLoading(true);
         try{
-            const response = await fetch('http://localhost:5000/auth/login',{
+            const response = await fetch(`${url}/login`,{
                 method:'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
@@ -124,6 +128,34 @@ export function AuthProvider({ children }){
         }
     })
 
+    const register = useCallback(async (username, password, email) => {
+        setIsLoading(true);
+        try{
+            const response = await fetch(`${url}/register`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, email })
+            });
+
+            if(!response.ok){
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Registration failed");
+            }
+
+            const loginSuccess = await login(username, password);
+            if(!loginSuccess){
+                throw new Error("Login after registration failed");
+            }
+            setIsLoading(false);
+            router.push("/");
+            return true;
+        }catch(error){
+            console.error("Registration failed:", error);
+            return false;
+        }
+    }, [fetchUser, router]);
+
     useEffect(() => {
         const checkAuth = async () => {
             const userData = await fetchUser();
@@ -140,7 +172,7 @@ export function AuthProvider({ children }){
     }, [fetchUser]);
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

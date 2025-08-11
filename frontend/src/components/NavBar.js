@@ -41,9 +41,14 @@ export default function NavBar() {
                         >Logout</button>
                     </div>
                 ):(
+                    <div className="flex space-x-2">
+                    <Link href="/register" className="bg-blue-500 px-3 py-1 rounded">
+                        Sign Up
+                    </Link>
                     <Link href="/login" className="bg-blue-500 px-3 py-1 rounded">
                         Login
                     </Link>
+                    </div>
                 )}
             </div>       
         </nav>
