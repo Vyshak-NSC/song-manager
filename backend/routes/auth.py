@@ -1,8 +1,9 @@
-from flask import request, jsonify, make_response
+from flask import request, jsonify, make_response, Blueprint
 from werkzeug.security import generate_password_hash, check_password_hash
 from db import get_db
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, set_refresh_cookies
-from . import auth_bp
+
+auth_bp = Blueprint('auth', __name__ , url_prefix='/auth')
 
 @auth_bp.route('/register', methods=['POST'])
 def register():

@@ -16,7 +16,7 @@ init_app(app)
 with app.app_context():
     init_db() 
     
-from auth import auth_bp
+from routes.auth import auth_bp
 app.register_blueprint(auth_bp)
 
 @app.route('/')
