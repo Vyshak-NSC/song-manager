@@ -10,9 +10,23 @@ def get_playlists():
     user_id = get_jwt_identity()
     conn = get_db()
     
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        offset = (page - 1) * per_page
+    except ValueError:
+        return jsonify(error="Invalid pagination parameters"), 400
+    
+    if page < 1 or per_page < 1:
+        return jsonify(error="Page and per_page must be positive integers"), 400
+    
+    total_playlists = conn.execute("SELECT COUNT(*) FROM playlists WHERE user_id = ?",(user_id,)).fetchone()[0]
+
     playlists = conn.execute('''
-        SELECT * FROM playlists WHERE user_id = ?
-    ''', (user_id,)).fetchall()
+        SELECT * FROM playlists WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?
+    ''', (user_id, per_page, offset)).fetchall()
+    
+    total_pages = (total_playlists + per_page-1) // per_page
     playlists_list = [dict(row) for row in playlists]
 
     return jsonify(playlists=playlists_list), 200
