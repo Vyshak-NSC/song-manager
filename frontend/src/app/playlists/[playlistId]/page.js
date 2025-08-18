@@ -1,5 +1,5 @@
 "use client";
-import React, {useEffect, useState} from 'react';
+import React, {use, useEffect, useState} from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link'; // Import Link if you'll link to song details
 
@@ -10,14 +10,14 @@ const dummyPlaylist = [
   { id: 4, title: 'Song Title 4', artist: 'Artist 4', album: 'Album Name 4', duration: '5:01', imageUrl: 'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTZCfDvITheGhtUM_VWWv7wGedzV4vaYrrwbIccFVj4CQ4OHd92'},
 ];
 
-export default function PlaylistPage() {
+export default function PlaylistPage( {params} ) {
   const [playlist, setPlaylist] = useState(dummyPlaylist);
-  
 
+  const { playlistId } = React.use(params);
   return (
     <ProtectedRoute>
       <div className="bg-black min-h-screen text-white p-4">
-        <h1 className="text-2xl font-bold mb-6">Recently Played</h1>
+        <h1 className="text-2xl font-bold mb-6">Playlist : {playlistId}</h1>
         
         <section>
           <div className="flex flex-col gap-4">
