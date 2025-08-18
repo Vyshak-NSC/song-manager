@@ -5,7 +5,7 @@ import Link from 'next/link'; // Import Link if you'll link to song details
 export default function HistorySection({ history }) {
   return (
     <section className="mb-10">
-      <h2 className="text-xl font-semibold mb-4">History</h2>
+      <h2 className="text-2xl font-semibold mb-4">History</h2>
       <div className="flex overflow-x-auto space-x-4">
         {history.map((song) => (
           <div key={song.id} className="w-[180px] flex-shrink-0">

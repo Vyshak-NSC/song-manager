@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 export const AuthContext = createContext();
 
-const url = "http://192.168.29.4:5000/auth";
+const url = "http://10.115.38.72:5000/auth";
 
 export function AuthProvider({ children }){
     const [user, setUser] = useState(null);

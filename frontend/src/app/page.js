@@ -38,7 +38,7 @@ export default function HomePage() {
 
   return (
     <ProtectedRoute>
-      <div className='bg-[#121212] min-h-screen text-white p-6'>
+      <div className='bg-black min-h-screen text-white p-4'>
         <HistorySection history={history} />
         <PlaylistsSection />
       </div>
